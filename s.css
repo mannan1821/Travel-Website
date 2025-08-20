@@ -38,6 +38,7 @@
     text-align: center;
     font-family: "Borel", cursive;
     font-style: normal;
+    background-color: black;
     color: yellow;
 }
 
@@ -96,10 +97,10 @@ input{
   outline: none; 
 }
 
-input:-webkit-autofill {
+/* input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 1000px yellow inset !important;
   -webkit-text-fill-color: black !important;
-}
+} */
 
 .p{
     font-size: smaller;
@@ -109,3 +110,4 @@ h3, h2, p {
     font-size: calc(16px + 1vw); 
 
 }
+
