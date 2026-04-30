@@ -5,13 +5,16 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// 1. Updated Table Schema with optional columns
 $sql = "CREATE TABLE IF NOT EXISTS tripform (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50),
     age INT,
     gender VARCHAR(10),
     email VARCHAR(100),
-    phone VARCHAR(10)
+    phone VARCHAR(10),
+    source VARCHAR(255) NULL,
+    description TEXT NULL
 )";
 
 if (!$conn->query($sql)) {
@@ -19,20 +22,34 @@ if (!$conn->query($sql)) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $phone = $_POST['phone_no'];
 
-    $stmt = $conn->prepare("INSERT INTO tripform (name, age, gender, email, phone) VALUES (?, ?, ?, ?, ?)");
+    if (strlen($phone) != 10 || !ctype_digit($phone)) {
+        die("VALIDATION ERROR: Phone number must be exactly 10 digits.");
+    }
+
+    // 2. Handle Optional Checkbox Array
+    // If no box is checked, it remains NULL. Otherwise, it joins choices with commas.
+    $source = isset($_POST['source']) ? implode(", ", $_POST['source']) : null;
+    $description = !empty($_POST['description']) ? $_POST['description'] : null;
+
+    // 3. Updated prepared statement to include the 2 new fields
+    $stmt = $conn->prepare("INSERT INTO tripform (name, age, gender, email, phone, source, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
     if (!$stmt) {
         die("PREPARE ERROR: " . $conn->error);
     }
 
+    // Bind 7 parameters: 5 required + 2 optional
     $stmt->bind_param(
-        "sisss",
+        "sisssss",
         $_POST['name'],
         $_POST['age'],
         $_POST['gender'],
         $_POST['email'],
-        $_POST['phone_no']
+        $phone,
+        $source,
+        $description
     );
 
     if (!$stmt->execute()) {
@@ -40,7 +57,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $stmt->close();
-
     header("Location: index.php?success=1");
     exit;
 }
@@ -57,7 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Borel&display=swap" rel="stylesheet">
 </head>
-
 <body>
     <video class="img" src="62129ed9-455f-4fa1-aa22-2cb25b6b496b.mp4" autoplay loop muted></video>
 
@@ -68,23 +83,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <?php
     if (isset($_GET['success'])) {
-        echo "<span style='color:orange;font-weight:bold;'>SUCCESS</span>";
+        echo "<div style='text-align:center;'><span style='color:orange;font-weight:bold;'>SUCCESS</span></div>";
     }
     ?>
 
     <div class="details">
         <form action="index.php" method="post">
-            <input type="text" name="name" id="name" placeholder="Enter Your Name (required)">
-            <input type="text" name="age" id="age" placeholder="Enter Your Age (required)">
-            <input type="text" name="gender" id="gender" placeholder="Enter Your Gender (required)">
-            <input type="text" name="email" id="email" placeholder="Enter Your Email (required)">
-            <input type="tel" name="phone_no" id="phone_no" placeholder="Enter Your Phone No. (required)">
+            <input type="text" name="name" id="name" placeholder="Enter Your Name (required)" required>
+            <input type="number" name="age" id="age" placeholder="Enter Your Age (required)" required>
+            <input type="text" name="gender" id="gender" placeholder="Enter Your Gender (required)" required>
+            <input type="email" name="email" id="email" placeholder="Enter Your Email (required)" required>
+
+            <input type="tel" name="phone_no" id="phone_no"
+                   placeholder="Enter 10 Digit Phone No. (required)"
+                   pattern="[0-9]{10}"
+                   maxlength="10"
+                   required>
 
             <br><br><br>
 
             <h2>How you got to know us?<p class="p">(optional)</p></h2>
             <br>
-
             <input type="checkbox" style="width: 20px; height: 20px; accent-color: red;" name="source[]" id="Youtube" value="Youtube"> Youtube
             <br>
             <input type="checkbox" style="width: 20px; height: 20px; accent-color: red;" name="source[]" id="Facebook" value="Facebook"> Facebook
