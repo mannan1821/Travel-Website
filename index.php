@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <video class="img" src="62129ed9-455f-4fa1-aa22-2cb25b6b496b.mp4" autoplay loop muted></video>
 
     <div class="container">
-        <h3>Welcome to Ghuraf Registration Form</h3>
+        <h3>Welcome to Registration Form</h3>
         <p>Enter your details to confirm your trip</p>
     </div>
 
