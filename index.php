@@ -1,45 +1,49 @@
 <?php
-$insert = false;
-if(!empty($name) && !empty($age) && !empty($gender) && !empty($email) && !empty(phone_no)){
-$server = "localhost";
-$username = "root";
-$password = "";
+$conn = new mysqli("mysql", "root", "root", "projects");
 
-$con = mysqli_connect($server, $username, $password);
-
-if(!$con){
-    die("<br>Database connection failed due to".mysqli_connect_error());
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 
-else{
-    // echo "<br>Database connected successfully";
+$sql = "CREATE TABLE IF NOT EXISTS tripform (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    age INT,
+    gender VARCHAR(10),
+    email VARCHAR(100),
+    phone VARCHAR(10)
+)";
+
+if (!$conn->query($sql)) {
+    die("TABLE ERROR: " . $conn->error);
 }
 
-$name = $_POST['name'];
-$age = $_POST['age'];
-$gender = $_POST['gender'];
-$email = $_POST['email'];
-$phone_no = $_POST['phone_no'];
-$description = $_POST['description'];
-$source = $_POST['source'] ?? [];
-$source_str = implode(", ", $source);  
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-$sql = "INSERT INTO `trip`.`trip` (`name`, `age`, `gender`, `email`, `phone_no`, `description`, `date`, `source`)
-VALUES ('$name', '$age', '$gender', '$email', '$phone_no', '$description', current_timestamp(),'$source_str')";
-// echo "<br>$sql";
+    $stmt = $conn->prepare("INSERT INTO tripform (name, age, gender, email, phone) VALUES (?, ?, ?, ?, ?)");
 
-if($con->query($sql)==true){
-    $insert = true;
-    // echo "<br>Data inserted succesfully";
+    if (!$stmt) {
+        die("PREPARE ERROR: " . $conn->error);
+    }
+
+    $stmt->bind_param(
+        "sisss",
+        $_POST['name'],
+        $_POST['age'],
+        $_POST['gender'],
+        $_POST['email'],
+        $_POST['phone_no']
+    );
+
+    if (!$stmt->execute()) {
+        die("INSERT ERROR: " . $stmt->error);
+    }
+
+    $stmt->close();
+
+    header("Location: index.php?success=1");
+    exit;
 }
-
-else{
-    echo "ERROR: $sql<br> $con->error";
-}
-
-$con->close();
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -47,20 +51,53 @@ $con->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="s.css">
-    <title>Thanks For Choosing Travel Junkie</title>
-
+    <title>Welcome To Travel Junkie</title>
+    <link rel="stylesheet" href="sa.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Borel&display=swap" rel="stylesheet">
 </head>
-<body>
-    <img class="img" src="natur_water_sea_travel_sky_beach_turquoise_summer_island_4k_hd.jpg" alt="Turquoise Summer Island">
-    <?php
-    if($insert==true){
-        echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><h1 class='details'>Your form has been successfully submitted. Happy Journey!</h1>";
-    } else{
-        echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><h1 class='details'>An Error Occured! Please Fill The Form Again.</h1>";
-    }
-    ?>  
 
+<body>
+    <video class="img" src="62129ed9-455f-4fa1-aa22-2cb25b6b496b.mp4" autoplay loop muted></video>
+
+    <div class="container">
+        <h3>Welcome to Ghuraf Registration Form</h3>
+        <p>Enter your details to confirm your trip</p>
+    </div>
+
+    <?php
+    if (isset($_GET['success'])) {
+        echo "<span style='color:orange;font-weight:bold;'>SUCCESS</span>";
+    }
+    ?>
+
+    <div class="details">
+        <form action="index.php" method="post">
+            <input type="text" name="name" id="name" placeholder="Enter Your Name (required)">
+            <input type="text" name="age" id="age" placeholder="Enter Your Age (required)">
+            <input type="text" name="gender" id="gender" placeholder="Enter Your Gender (required)">
+            <input type="text" name="email" id="email" placeholder="Enter Your Email (required)">
+            <input type="tel" name="phone_no" id="phone_no" placeholder="Enter Your Phone No. (required)">
+
+            <br><br><br>
+
+            <h2>How you got to know us?<p class="p">(optional)</p></h2>
+            <br>
+
+            <input type="checkbox" style="width: 20px; height: 20px; accent-color: red;" name="source[]" id="Youtube" value="Youtube"> Youtube
+            <br>
+            <input type="checkbox" style="width: 20px; height: 20px; accent-color: red;" name="source[]" id="Facebook" value="Facebook"> Facebook
+            <input type="checkbox" style="width: 20px; height: 20px; accent-color: red;" name="source[]" id="Instagram" value="Instagram"> Instagram
+
+            <br><br><br>
+
+            <textarea name="description" id="description" placeholder="Why Us? (optional)"></textarea>
+            <br><br>
+
+            <button type="submit" class="button">Submit</button>
+            <button type="reset" class="button">Reset</button>
+        </form>
+    </div>
 </body>
 </html>
-
